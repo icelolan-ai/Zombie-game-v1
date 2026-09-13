@@ -8,7 +8,7 @@ export class Simulation{
   for(const b of BUILDINGS)for(let f=0;f<=b.floors;f++)for(const r of [...wallsFor(b,f),...furnitureFor(b,f)]){r.floor=f;this.walls.push(r);index(this.wallCells,r,f);}
   for(const r of OBSTACLES){this.walls.push({...r,floor:0});index(this.wallCells,r,0);}for(const d of this.doors)index(this.doorCells,{...doorRect(d),door:d},d.floor);
   this.buildNavigation();this.create('zombie',0,8,true);const guards=Math.min(80,Math.max(6,Math.round(this.total*.08)));
-  for(let i=0;i<this.total;i++){const road=this.streetNodes[Math.floor(this.random()*this.streetNodes.length)];let x=road.x+(this.random()-.5)*2,z=road.z+(this.random()-.5)*2;if(i<5){x=(i-2)*1.1;z=12;}const e=this.create(i>=this.total-guards?(i%4===0?'soldier':'police'):'villager',x,z);e.home=i%BUILDINGS.length;e.slot=i%4;}
+  for(let i=0;i<this.total;i++){const road=this.streetNodes[Math.floor(this.random()*this.streetNodes.length)];let x=road.x+(this.random()-.5)*2,z=road.z+(this.random()-.5)*2;if(i<5){x=(i-2)*1.1;z=12;}const e=this.create(i>=this.total-guards?(i%4===0?'soldier':'police'):'villager',x,z);e.home=i%BUILDINGS.length;e.slot=i%4;if(i>=this.total-guards){const j=i-(this.total-guards);e.home=[2,17,32,18][Math.floor(j/10)%4];e.slot=j%10;}}
   this.rebuildSpatial();
  }
  random(){this.seed=(1664525*this.seed+1013904223)>>>0;return this.seed/4294967296;}
@@ -43,14 +43,14 @@ export class Simulation{
   const dx=next.x-e.x,dz=next.z-e.z,len=Math.hypot(dx,dz);if(!len)return;const step=Math.min(speed*dt,len);this.moveEntity(e,dx/len*step,dz/len*step);
  }
  shelter(e){const b=BUILDINGS[e.home];const floor=e.shelterFloor??0;return {x:b.x+(e.slot<2?-6.3:6.3),z:b.z+(e.slot%2?-5:5),floor};}
- rally(e){const b=BUILDINGS[e.home];return {x:b.x+(e.slot%2?1:-1),z:b.z+7-Math.floor(e.slot/2),floor:0};}
+ rally(e){const b=BUILDINGS[e.home];return {x:b.x+(e.slot%5-2)*1.1,z:b.z+7-Math.floor(e.slot/5)*1.5,floor:0};}
  think(e){if(e.state==='zombie'){let n=this.nearest(e,20,n=>n.state==='human'||n.state==='infected'&&n.downUntil>this.time);if(!n)n=this.nearest(e,14,n=>n.state==='human',false);e.targetId=n?.id??null;if(n){e.goal={x:n.x,z:n.z,floor:n.floor};e.behavior='hunt';}else{const b=BUILDINGS[insideHouse(e.x,e.z)];if(b&&e.floor<b.floors){e.goal={x:b.x,z:b.z,floor:e.floor+1};e.behavior='search';}else this.wanderGoal(e);}}
   else if(armed(e)){e.targetId=this.nearest(e,23,n=>n.state==='zombie')?.id??null;if(this.chaos||e.role==='soldier'&&e.reinforcement){e.goal=this.rally(e);e.behavior='defend';}else this.wanderGoal(e);}
   else if(this.chaos){if(e.shelterFloor===undefined){let best=BUILDINGS[e.home],d=Infinity;for(const b of BUILDINGS){let dd=dist2(e,b);if(dd<d){d=dd;best=b;}}e.home=best.id;e.shelterFloor=Math.min(best.floors-1,e.id%3);e.repath=0;}const threat=this.nearest(e,12,n=>n.state==='zombie',false);if(threat&&this.time>=(e.fleeAt||0)){const b=BUILDINGS[e.home];e.shelterFloor=Math.min(b.floors,e.shelterFloor+1);e.fleeAt=this.time+8;e.repath=0;}e.goal=this.shelter(e);if(e.shelterFloor===BUILDINGS[e.home].floors)e.goal={...e.goal,x:BUILDINGS[e.home].x+6,z:BUILDINGS[e.home].z+7};e.behavior='shelter';}
   else this.wanderGoal(e);
  }
  wanderGoal(e){if(!e.goal||dist2(e,e.goal)<1.2||e.behavior!=='wander'){const n=this.streetNodes[Math.floor(this.random()*this.streetNodes.length)];e.goal={x:n.x,z:n.z,floor:0};e.repath=0;}e.behavior='wander';}
- spawnReinforcements(){const camp=CAMPS[this.waves%4];this.waves++;this.reinforced=true;this.total+=10;this.nextWaveAt=this.time+25;for(let i=0;i<10;i++){let x=camp.x+(camp.x===0?(i%5-2)*1.2:Math.floor(i/5)*1.2),z=camp.z+(camp.z===0?(i%5-2)*1.2:Math.floor(i/5)*1.2);const e=this.create('soldier',x,z);e.home=[2,17,32,18][(this.waves-1)%4];e.slot=i%4;e.reinforcement=true;e.behavior='defend';}this.events.push({type:'reinforcements',count:10,x:camp.x,z:camp.z});}
+ spawnReinforcements(){const camp=CAMPS[this.waves%4];this.waves++;this.reinforced=true;this.total+=10;this.nextWaveAt=this.time+25;for(let i=0;i<10;i++){let x=camp.x+(camp.x===0?(i%5-2)*1.2:Math.floor(i/5)*1.2),z=camp.z+(camp.z===0?(i%5-2)*1.2:Math.floor(i/5)*1.2);const e=this.create('soldier',x,z);e.home=[2,17,32,18][(this.waves-1)%4];e.slot=i;e.reinforcement=true;e.behavior='defend';}this.events.push({type:'reinforcements',count:10,x:camp.x,z:camp.z});}
  step(dt,input={x:0,z:0,bite:false}){if(this.outcome)return;dt=clamp(dt,0,.1);this.time+=dt;this.pathBudget=8;this.pathCount=0;let zombies=0;
   for(const e of this.entities){e.px=e.x;e.pz=e.z;e.py=e.y;e.cool=Math.max(0,e.cool-dt);e.pose=Math.max(0,e.pose-dt);e.move=0;if(e.state==='infected'&&this.time+1e-8>=e.infectAt){e.state='zombie';e.infectAt=null;e.everConverted=true;this.converted++;e.goal=null;e.route=[];e.thinkAt=0;this.events.push({type:'convert',x:e.x,z:e.z,y:e.y});}if(e.state==='zombie')zombies++;}
   if(this.converted>=this.total){this.outcome='win';this.events.push({type:'win'});return;}this.waveMilestone=Math.max(this.waveMilestone,Math.floor(zombies/10));if(zombies>=30&&!this.chaos){this.chaos=true;this.events.push({type:'panic'});}if(this.waves<this.waveMilestone&&this.time>=this.nextWaveAt)this.spawnReinforcements();
