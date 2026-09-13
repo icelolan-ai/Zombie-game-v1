@@ -14,8 +14,8 @@ export class View{
  this.box(21,.24,24,0xcde8e4,0,.02,0,g);
  for(let f=0;f<=b.floors;f++){const level=new T.Group();level.position.y=f*FLOOR_HEIGHT;g.add(level);const interior=new T.Group();level.add(interior);const front=new T.Group();level.add(front);
  // Separate floor slabs leave a real opening above both stair flights.
- for(const [x,z,w,d] of [[-6.5,0,5,20],[6.5,0,5,20],[0,-8.4,8,3.2],[0,8.4,8,3.2],[0,0,.7,13.6]])this.box(w,.2,d,f===b.floors?0xb3d8d9:0xf5e8cf,x,.08,z,level);
- if(f===0)this.box(7.8,.2,13.5,0xf5e8cf,0,.08,0,level);
+ for(const [x,z,w,d] of [[-6.5,0,5,20],[6.5,0,5,20],[0,-8.4,8,3.2],[0,8.4,8,3.2]])this.box(w,.2,d,f===b.floors?0xb3d8d9:0xf5e8cf,x,.08,z,level);
+ if(f===0)this.box(7.8,.2,13.5,0xf5e8cf,0,.08,0,level);else{const lane=(f-1)%2?2:-2;for(const [left,right] of [[-4,lane-1],[lane+1,4]])this.box(right-left,.2,13.6,0xf5e8cf,(left+right)/2,.08,0,level);}
  for(const w of wallsFor(b,f)){const h=f===b.floors?1:3.4;const par=w.interior?interior:w.z>b.z+9||w.x>b.x+8?front:level;this.box(w.w,h,w.d,b.color,w.x+w.w/2-b.x,h/2+.18,w.z+w.d/2-b.z,par);}
  if(f<b.floors){// Perimeter trim leaves the stairwell open.
  for(const [x,z,w,d] of [[0,-10,18.5,.35],[0,10,18.5,.35],[-9,0,.35,20],[9,0,.35,20]])this.box(w,.22,d,0xffecde,x,3.48,z,level);
@@ -27,8 +27,8 @@ export class View{
  }else{this.box(2,1.3,2,0xb8dfe8,5,.8,-6,level);const tank=new T.Mesh(new T.CylinderGeometry(1.15,1.15,2,12),this.mat(0x8fcddd));tank.position.set(-6,1.25,-6);level.add(tank);}
  levels.push({group:level,interior,front,floor:f});}
  this.houses.push({g,b,levels,cut:levels[b.floors].group});}
- for(const r of OBSTACLES){const x=r.x+r.w/2,z=r.z+r.d/2;if(r.tree){this.box(.8,2.5,.8,0xab8074,x,1.25,z);for(let i=0;i<5;i++)this.ball(1.1,[0xffd16d,0xf3bd62,0xf7d986][i%3],x+Math.sin(i*2.4)*.7,3.1+(i%2)*.6,z+Math.cos(i*2.4)*.7);}else{const col=r.x<0?0xffd77e:0xf1a7bb;this.box(2,.9,3.8,col,x,.65,z);this.box(1.65,.7,1.8,col,x,1.4,z);this.box(1.5,.5,.06,0x8cb4c5,x,1.4,z+.93);for(const dx of [-1,1])for(const dz of [-1.1,1.1])this.ball(.35,0x63778e,x+dx,.38,z+dz);}}
- for(const c of CAMPS){this.box(10,.2,7,0x9bbfbd,c.x,.1,c.z);for(const side of [-1,1]){this.box(2,1.3,2,0x83a5a3,c.x+side*3,.7,c.z);this.box(2.2,.4,2.2,0x6f9598,c.x+side*3,1.55,c.z);}this.box(.12,5,.12,0xe9ebd7,c.x,2.5,c.z);this.box(2,1,.05,0xf7c1bf,c.x+1,4.5,c.z);}
+ for(const r of OBSTACLES){if(r.camp)continue;const x=r.x+r.w/2,z=r.z+r.d/2;if(r.tree){this.box(.8,2.5,.8,0xab8074,x,1.25,z);for(let i=0;i<5;i++)this.ball(1.1,[0xffd16d,0xf3bd62,0xf7d986][i%3],x+Math.sin(i*2.4)*.7,3.1+(i%2)*.6,z+Math.cos(i*2.4)*.7);}else{const col=r.x<0?0xffd77e:0xf1a7bb;this.box(2,.9,3.8,col,x,.65,z);this.box(1.65,.7,1.8,col,x,1.4,z);this.box(1.5,.5,.06,0x8cb4c5,x,1.4,z+.93);for(const dx of [-1,1])for(const dz of [-1.1,1.1])this.ball(.35,0x63778e,x+dx,.38,z+dz);}}
+ for(const c of CAMPS){this.box(10,.2,7,0x9bbfbd,c.x,.1,c.z);for(const side of [-1,1]){this.box(2,1.3,2,0x83a5a3,c.x+side*5,.7,c.z);this.box(2.2,.4,2.2,0x6f9598,c.x+side*5,1.55,c.z);}this.box(.12,5,.12,0xe9ebd7,c.x,2.5,c.z);this.box(2,1,.05,0xf7c1bf,c.x+1,4.5,c.z);}
  }
 
  actor(e){const root=new T.Group(),body=new T.Group();root.add(body);const shirtColor=e.role==='police'?0x405876:e.role==='soldier'?0x677454:[0xbb775b,0x6d91a1,0xd0ad65,0x857795,0x97a37e][e.id%5];const skin=this.mat(e.state==='zombie'?0x91ad67:0xdbb48e).clone();const shirt=this.box(.62,.64,.4,shirtColor,0,1.01,0,body);shirt.geometry.dispose();shirt.geometry=new T.CapsuleGeometry(.26,.34,4,8);const head=new T.Mesh(new T.SphereGeometry(.28,10,8),skin);head.scale.set(.9,1.06,.92);head.position.y=1.65;head.castShadow=true;body.add(head);this.box(.42,.14,.37,e.role==='police'?0x364a66:e.role==='soldier'?0x66704b:0x514a3c,0,1.88,-.03,body);this.box(.09,.06,.05,0x283c31,-.1,1.67,.235,body);this.box(.09,.06,.05,0x283c31,.1,1.67,.235,body);const arms=[],legs=[];for(const s of [-1,1]){const arm=new T.Group();arm.position.set(s*.4,1.27,0);body.add(arm);this.box(.18,.42,.2,shirtColor,0,-.17,0,arm);const hand=new T.Mesh(new T.SphereGeometry(.12,7,6),skin);hand.position.set(0,-.46,0);arm.add(hand);arms.push(arm);const leg=new T.Group();leg.position.set(s*.17,.72,0);body.add(leg);this.box(.21,.55,.23,0x4d5959,0,-.25,0,leg);this.box(.25,.16,.4,0x394a42,0,-.56,.07,leg);legs.push(leg);}let gun=null;if(e.role==='police'||e.role==='soldier'){gun=this.box(.13,.14,e.role==='soldier'?.65:.35,0x303d3c,.01,-.42,.2,arms[1]);}
@@ -42,7 +42,7 @@ export class View{
   let detailed=0,lod=0;for(const e of this.sim.entities){const dx=e.x-this.look.x,dz=e.z-this.look.z,range=dx*dx+dz*dz,building=insideHouse(e.x,e.z);
    if(range>this.zoom*this.zoom*2.7||building>=0&&(building!==activeBuilding||e.floor!==activeFloor))continue;
    const x=T.MathUtils.lerp(e.px??e.x,e.x,t),z=T.MathUtils.lerp(e.pz??e.z,e.z,t),floor=T.MathUtils.lerp(e.py??e.y,e.y,t)+.2;
-   if(range>400||detailed>=96){if(e.state!=='dead'){this.lodTransform.position.set(x,floor+.8,z);this.lodTransform.updateMatrix();this.crowd.setMatrixAt(lod,this.lodTransform.matrix);this.crowd.setColorAt(lod++,this.tempColor.setHex(e.state==='zombie'?0x93b96b:e.role==='soldier'?0x718c89:e.role==='police'?0x6e93bd:0xe0a4bc));}continue;}
+   if(range>400||detailed>=96){if(e.state!=='dead'&&lod<16384){this.lodTransform.position.set(x,floor+.8,z);this.lodTransform.updateMatrix();this.crowd.setMatrixAt(lod,this.lodTransform.matrix);this.crowd.setColorAt(lod++,this.tempColor.setHex(e.state==='zombie'?0x93b96b:e.role==='soldier'?0x718c89:e.role==='police'?0x6e93bd:0xe0a4bc));}continue;}
    detailed++;let a=this.actors.get(e.id);if(!a){if(this.actors.size>=128){const old=[...this.actors].find(([id,o])=>!o.visible&&o.role===e.role);if(old){a=old[1];this.actors.delete(old[0]);} }if(!a)a=this.actor(e);this.actors.set(e.id,a);}a.visible=true;
    a.halo.visible=e.state==='infected';a.root.position.set(x,floor+(e.state==='dead'?.13:0),z);
    let delta=Math.atan2(Math.sin(e.angle-a.root.rotation.y),Math.cos(e.angle-a.root.rotation.y));a.root.rotation.y+=delta*Math.min(1,dt*15);
@@ -56,7 +56,7 @@ export class View{
   this.crowd.count=lod;this.crowd.instanceMatrix.needsUpdate=true;if(this.crowd.instanceColor)this.crowd.instanceColor.needsUpdate=true;
   if(p){const x=T.MathUtils.lerp(p.px??p.x,p.x,t),z=T.MathUtils.lerp(p.pz??p.z,p.z,t),floor=T.MathUtils.lerp(p.py??p.y,p.y,t)+.2;this.ring.position.set(x,floor+.06,z);this.ring.visible=p.state==='zombie';this.temp.set(x,floor+.4,z);this.look.lerp(this.temp,1-Math.exp(-dt*7));}
   this.camera.position.set(this.look.x+Math.sin(this.yaw)*this.zoom,this.look.y+this.zoom*.92,this.look.z+Math.cos(this.yaw)*this.zoom);this.camera.lookAt(this.look);
-  for(const h of this.houses){const inside=activeBuilding===h.b.id;h.g.visible=Math.hypot(h.b.x-this.look.x,h.b.z-this.look.z)<85;for(const l of h.levels){l.group.visible=!inside||l.floor<=activeFloor;l.interior.visible=inside&&l.floor===activeFloor;l.front.visible=!(inside&&l.floor===activeFloor);}}
+  for(const h of this.houses){const inside=activeBuilding===h.b.id;h.g.visible=Math.hypot(h.b.x-this.look.x,h.b.z-this.look.z)<85;for(const l of h.levels){l.group.visible=!inside||l.floor<=activeFloor;l.interior.visible=inside&&(l.floor===activeFloor||p.stair&&l.floor===Math.min(p.stair.a.floor,p.stair.c.floor));l.front.visible=!(inside&&l.floor===activeFloor);}}
   this.updateDoors(activeBuilding,activeFloor);
 
   if(!paused){for(let i=this.fx.length-1;i>=0;i--){let f=this.fx[i];f.life-=dt;if(f.v){f.v.y-=dt*8;f.mesh.position.addScaledVector(f.v,dt);if(f.mesh.position.y<.04)f.life=0;}if(f.life<=0){this.scene.remove(f.mesh);f.mesh.geometry.dispose();if(f.type==='shot')f.mesh.material.dispose();this.fx.splice(i,1);}}for(let i=this.stains.length-1;i>=0;i--){const s=this.stains[i];s.life-=dt;s.mesh.material.opacity=Math.min(.65,s.life/12*.65);if(s.life<=0){this.scene.remove(s.mesh);s.mesh.geometry.dispose();s.mesh.material.dispose();this.stains.splice(i,1);}}}

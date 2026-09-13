@@ -14,10 +14,11 @@ export function wallsFor(b,floor=0){const x=b.x,z=b.z;let a=[{x:x-9,z:z-10,w:18,
  if(floor<b.floors)for(const side of [-1,1]){const wx=x+side*4-.2;for(const [off,len] of [[-9.6,3.6],[-4,8],[6,3.6]])a.push({x:wx,z:z+off,w:.4,d:len,interior:true});a.push({x:side<0?x-8.6:x+4.2,z:z-.2,w:4.4,d:.4,interior:true});}
  return a;
 }
-export function furnitureFor(b,floor){if(floor===b.floors)return [];return [-1,1].flatMap(side=>[-1,1].map(end=>({x:b.x+side*6.8-1,z:b.z+end*7.5-.65,w:2,d:1.3,furniture:true})));}
+export function furnitureFor(b,floor){if(floor===b.floors)return [{x:b.x+4,z:b.z-7,w:2,d:2,furniture:true},{x:b.x-7.15,z:b.z-7.15,w:2.3,d:2.3,furniture:true}];return [-1,1].flatMap(side=>[-1,1].map(end=>({x:b.x+side*6.8-1,z:b.z+end*7.5-.65,w:2,d:1.3,furniture:true})));}
 export function doorTemplates(){let doors=[];for(const b of BUILDINGS){doors.push({building:b.id,floor:0,x:b.x,z:b.z+9.8,w:3,d:.4,exterior:true});for(let f=0;f<b.floors;f++)for(const side of [-1,1])for(const end of [-1,1])doors.push({building:b.id,floor:f,x:b.x+side*4,z:b.z+end*5,w:.4,d:2,exterior:false});}return doors.map((d,id)=>({...d,id,hp:100,maxHp:100,open:false,broken:false,closeAt:0}));}
 export const OBSTACLES=[];
 for(const b of BUILDINGS){OBSTACLES.push({x:b.x-11.6,z:b.z-8,w:.8,d:.8,tree:true});if(b.id%2===0)OBSTACLES.push({x:b.x+10.5,z:b.z+12,w:2,d:3.8,car:true});}
+for(const c of CAMPS)for(const side of [-1,1])OBSTACLES.push({x:c.x+side*5-1,z:c.z-1,w:2,d:2,camp:true});
 export function segmentBox(a,b,r,pad=0){let lo=0,hi=1;for(const axis of ['x','z']){let delta=b[axis]-a[axis],min=r[axis]-pad,max=r[axis]+(axis==='x'?r.w:r.d)+pad;if(Math.abs(delta)<1e-9){if(a[axis]<min||a[axis]>max)return false;}else{let u=(min-a[axis])/delta,v=(max-a[axis])/delta;if(u>v)[u,v]=[v,u];lo=Math.max(lo,u);hi=Math.min(hi,v);if(lo>hi)return false;}}return true;}
 export const doorRect=d=>({x:d.x-d.w/2,z:d.z-d.d/2,w:d.w,d:d.d});
 export function stairsFor(b,f){return {a:{x:b.x+(f%2?2:-2),z:b.z+(f%2?-6:6),floor:f},b:{x:b.x+(f%2?2:-2),z:b.z+(f%2?6:-6),floor:f+1}};}

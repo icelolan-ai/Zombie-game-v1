@@ -43,7 +43,7 @@ function animate(now){
   const sx=joy.x+(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),sz=joy.z+(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0);
   const input={x:sx*Math.cos(view.yaw)+sz*Math.sin(view.yaw),z:-sx*Math.sin(view.yaw)+sz*Math.cos(view.yaw),bite:held||keys.has(' ')};
   while(acc>=.05&&!sim.outcome){sim.step(.05,input);acc-=.05;}
-  for(const ev of sim.events){view.event(ev);if(['bite','shot','convert'].includes(ev.type))tone(ev.type);if(ev.type==='panic')toast('เมืองแตกตื่น! ผู้คนหนีเข้าที่พักและขึ้นชั้นบน');if(ev.type==='transfer')toast('ย้ายไปควบคุมซอมบี้ที่เหลือ');if(ev.type==='reinforcements')toast('ทหารเสริม 10 นายเข้าจากขอบเมือง!');}
+  let soundBudget=5;for(const ev of sim.events){view.event(ev);if(soundBudget>0&&['bite','shot','convert'].includes(ev.type)){tone(ev.type);soundBudget--;}if(ev.type==='panic')toast('เมืองแตกตื่น! ผู้คนหนีเข้าที่พักและขึ้นชั้นบน');if(ev.type==='transfer')toast('ย้ายไปควบคุมซอมบี้ที่เหลือ');if(ev.type==='reinforcements')toast('ทหารเสริม 10 นายเข้าจากขอบเมือง!');}
   sim.events=[];if(sim.outcome)endRound();else if(sim.time-lastSave>20){lastSave=sim.time;save(false);}
  }else{fpsStart=now;fpsFrames=0;}
  view.update(dt,paused,Math.min(1,acc/.05));if(now-hudAt>150){hudAt=now;hud();}frame++;
