@@ -19,7 +19,7 @@ for(const viewport of [{width:1280,height:800},{width:390,height:844},{width:844
  await page.locator('#save').click();await page.waitForFunction(()=>document.querySelector('#toast').textContent==='บันทึกเกมแล้ว');
  await page.locator('#load').click();await page.waitForFunction(()=>document.querySelector('#menu').hidden);assert.equal(await page.evaluate(()=>window.__game.sim.entities[1].state),'infected');
  await page.evaluate(()=>{let g=window.__game;g.pause();let e=g.sim.entities[1];g.sim.time=e.infectAt-.05;g.sim.step(.05);g.sim.player.x=-25;g.sim.player.z=-25;});
- await page.waitForTimeout(150);assert.equal(await page.evaluate(()=>window.__game.sim.entities[1].state),'zombie');assert.equal(await page.evaluate(()=>window.__game.view.houses[0].cut.visible),false);
+ assert.equal(await page.evaluate(()=>window.__game.sim.entities[1].state),'zombie');await page.waitForFunction(()=>window.__game.view.houses[0].cut.visible===false);
  await page.locator('#play').click();await page.screenshot({path:`test-output/game-${viewport.width}.png`});
  // Controls must be on screen and do not overlap the bite button.
  const boxes=await page.evaluate(()=>['joystick','bite','interact','pause'].map(id=>{const r=document.getElementById(id).getBoundingClientRect();return {id,x:r.x,y:r.y,w:r.width,h:r.height};}));for(const b of boxes){assert(b.x>=0&&b.y>=0&&b.x+b.w<=viewport.width+1&&b.y+b.h<=viewport.height+1,JSON.stringify(b));}
