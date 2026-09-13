@@ -1,63 +1,40 @@
-# OUTBREAK VILLAGE — Clay Edition v0.2
+# Outbreak City — Pastel Edition v0.3
 
-เกมซอมบี้สามมิติบนเว็บ เล่นด้วย iPhone/iPad หรือคอมพิวเตอร์
+A free, self-contained browser zombie sandbox, deployed with GitHub Pages. Vanilla JavaScript and vendored Three.js; no runtime CDN or build step.
 
-เปิดเกม: https://icelolan-ai.github.io/Zombie-game-v1/
+## Play
 
-## สิ่งที่เพิ่มใน v0.2
+https://icelolan-ai.github.io/Zombie-game-v1/?v=0.3
 
-- เลือกประชากรเริ่มต้น **20–100 คน** ก่อนเริ่มรอบ รวมชาวบ้าน ตำรวจ และทหาร
-- บ้านที่เข้าได้ **23 หลัง** ในพื้นที่ประมาณ **136 × 136 เมตร** ถนนเชื่อมย่านบ้าน ค่ายทหารเหนือแผนที่ ฐานแผนที่หนา เนินดินปั้นและบ่อน้ำตกแต่ง
-- สไตล์ Clay 3D: รูปทรงขอบมน หลังคาโค้งขอบ วัสดุด้าน สีดิน/พาสเทล ต้นไม้กลมและแสงอุ่น
-- ตำรวจและทหารแบ่งทีม มีบ้านตั้งรับและตำแหน่งประจำตัว ยิงเมื่อมีแนวมองชัด ไม่ยิงทะลุผนัง และไม่วิ่งตามออกจากแนวตั้งรับ
-- เมื่อมี **ซอมบี้ที่ยังมีชีวิตมากกว่า 10 ตัว (รวมผู้เล่น)** จะมีทหารเสริม **8 นายหนึ่งครั้งต่อรอบ** จากค่ายทางเหนือ แบ่งทีมไปรวมตั้งรับในบ้าน
-- กำลังเสริมรวมอยู่ในจำนวนเป้าหมายด้วย เมื่อ NPC ทุกคนกลายร่างครบ จะแสดงผลชนะและหยุดเกมทันที
-- UI ระหว่างเล่นขนาดเล็กลง แผนที่ย่อและตัวเลขอยู่ขอบจอ ปุ่มสำคัญยังมีพื้นที่สัมผัสอย่างน้อย 44px
+WASD / touch joystick moves relative to camera. Space / Bite attacks people or a nearby closed door. E / Hammer strikes a door. Q rotates the camera. Pinch or wheel zooms. Walk along the stairs to climb or descend; the camera follows elevation and cuts away higher storeys in your current building.
 
-## การเล่น
+## City rules
 
-มือถือ: จอยซ้ายเดิน ปุ่มขวากัด ประตูเมื่ออยู่ใกล้ ปุ่มหมุน/ซูม และใช้สองนิ้วซูมได้
+- Population selector: 100–2,000 initial NPC, including police/soldiers.
+- 216 × 216 world, 36 pastel buildings with 3, 4, 8 or 9 occupied storeys and accessible rooftops. Each occupied storey contains four separate rooms and doors.
+- Walls, room partitions, furniture, tree trunks and parked cars block movement. Shots and bites cannot pass through closed doors or between floors.
+- Doors have 100 durability. Hold Bite or press Hammer nearby to destroy them. Civilian/guard AI opens intact doors and automatically closes them after crossing, when the doorway is clear. Zombies cannot open intact doors.
+- A bite knocks a victim down for seven seconds. Nearby zombies can crouch and feed together. Conversion occurs 25 simulation seconds after the original bite; further feeding does not reset the clock.
+- Below 30 living zombies civilians continue ordinary wandering. At 30, a persistent citywide evacuation begins: civilians choose nearby shelter, use rooms/stairs and flee to higher storeys when threatened. Police form defensive groups in building entrances.
+- Every new peak of ten living zombies unlocks one ten-soldier team. Teams arrive from alternating north/east/south/west edge camps, at least 25 simulation seconds apart. Thresholds never retrigger by killing and regrowing the same number of zombies. Pending teams remain queued.
+- Victory occurs when every currently spawned NPC has converted, including reinforcements. Victory cancels the remaining reinforcement queue so the game can finish. Losing the controlled zombie transfers control to another survivor; defeat occurs when no zombie or incubating human remains.
 
-คอมพิวเตอร์: WASD/ลูกศรเดิน, Space กัด, E ประตู, Q หมุนกล้อง, ล้อเมาส์ซูม, Esc พัก
+## Performance and saving
 
-กัดสำเร็จเริ่มเวลาติดเชื้อ **25 วินาทีในเกม** การกัดซ้ำไม่เริ่มเวลาใหม่ ซอมบี้ใหม่แพร่เชื้อต่อเอง ผู้ติดเชื้อที่ตายก่อนกลายร่างไม่ฟื้นขึ้นมา ร่างผู้เล่นตายจะเปลี่ยนไปควบคุมซอมบี้ที่ยังอยู่ หากเหลือเพียงผู้ติดเชื้อจะรอจนกลายร่าง หากไม่เหลือทั้งสองฝ่ายการระบาดจะแพ้
+Spatial collision/sensing queries, an explicit multilevel navigation graph, at most eight path searches per simulation tick, staggered AI thinking, static scenery batches, static lighting shadows, instanced crowds, up to 96 nearby detailed animated actors, and adaptive render resolution target smoother mobile performance. The 2,000 population mode is intentionally available, but 60 FPS is not guaranteed on any particular iPhone/iPad. Start at 100 and increase according to device performance.
 
-เข้าบ้านแล้วหลังคาซ่อน ผนังด้านหน้าจาง แต่การชนและการบังแนวมองยังอยู่ NPC มนุษย์เปิดประตู ส่วนซอมบี้ใช้เวลาพังประตูที่ปิด
+Simulation runs at 20 Hz and rendering interpolates positions/elevation. Browser focus loss pauses the game; cooldown and infection timing use game time. Blood effects are bounded. Far NPC remain simulated; their detailed render meshes are omitted.
 
-## ความลื่นไหล
+Autosave uses local IndexedDB; export/import uses JSON. **The v0.3 city changes map topology and cannot import v0.1/v0.2 village saves.** Old local saves are not automatically erased; start a new round for the city.
 
-ค่าเริ่มต้น **อัตโนมัติ · เป้าหมาย 60 FPS** จะลด/เพิ่มความละเอียดภาพตามเฟรมเรตจริง และแสดง FPS ที่มุมล่าง ไม่ลดจำนวนประชากรหรือเปลี่ยนกฎเกม
+## Validation
 
-- แสดงภาพตำแหน่งระหว่างรอบจำลอง 20Hz เพื่อให้การเดินไม่กระโดดเป็นช่วง
-- กระจายการคิด AI และจำกัด A* ไม่เกิน 2 คำขอต่อรอบ ใช้กริดทางเดินที่เตรียมไว้และ heap
-- ค้นหาเพื่อนบ้านด้วย spatial hash แทนการเทียบ NPC ทุกคู่
-- รวมฉากตามพื้นที่/สี และใช้ instancing วาดตัวละคร เก็บรายการชิ้นส่วนไว้ไม่สร้างใหม่ทุกเฟรม
-- เงาฉากคำนวณครั้งเดียว ตัวละครใช้เงาสัมผัสพื้นแบบเบา จำกัดเลือดและไม่สร้างเอฟเฟกต์ไกลกล้อง
-- หน้าพักลดการวาดภาพเหลือ 10Hz
+`npm test`: infection timing, closed door/obstacle collisions, inter-floor isolation, reinforcement thresholds/cooldowns, panic threshold, real multilevel path traversal, player climbing/descending, 2,000-population path budget, snapshot validation and final victory.
 
-**60 FPS เป็นเป้าหมาย ไม่ใช่การรับประกันทุกเครื่อง** จำนวนคน รุ่น GPU ความร้อน และโหมดประหยัดพลังงานมีผล ชุดทดสอบเบราว์เซอร์ใช้ Chromium บน GitHub Actions จึงไม่แทนผล Safari บน iPhone/iPad จริง
+`tests/browser.mjs`: Chromium software-rendered smoke checks at desktop, phone portrait, phone landscape and tablet sizes; population, bite, save/load, floor cutaways, bounded draw calls, reinforcement and end screen. Screenshots are uploaded by CI. This is not a benchmark of physical iOS hardware.
 
-## เซฟ
+## Limits
 
-IndexedDB บันทึกอัตโนมัติทุก 20 วินาทีที่เล่นอยู่และเมื่อพักเกม สลับแอปแล้วหยุดเวลา มีส่งออก/นำเข้า JSON สำหรับย้ายเครื่อง v0.2 อ่านเซฟ v0.1 ได้ โดยเพิ่มอาคารใหม่และคงตัวละคร/เวลาเดิม เซฟใหม่เก็บจำนวนประชากรและสถานะกำลังเสริมเพื่อไม่ให้เกิดทหารซ้ำตอนโหลด
+Buildings and crowds are procedural clay-like models, not scanned clay or stop-motion footage. Cars are parked props. Stair flights constrain movement along a ramp; there is no jumping or falling physics. Crowd contacts can overlap in tight queues; rigid obstacles remain solid. No multiplayer or ragdoll physics. Exterior shadows are baked for performance; interiors use ambient lighting and floor-aware actor contact shadows.
 
-## พัฒนา
-
-เกมเป็น static ES modules ไม่ต้อง build และไม่มีบริการ AI/การเรียก CDN ขณะเล่น
-
-```sh
-python3 -m http.server 8080
-npm test
-```
-
-- `src/simulation.js`: การต่อสู้ ติดเชื้อ เส้นทาง ประชากร ทีมตั้งรับ กำลังเสริม เป้าหมาย และเซฟ
-- `src/view.js`: ฉากดินปั้น กล้อง แสง โมเดล การแสดงตำแหน่งระหว่างเฟรม และ batching
-- `src/main.js`: จอสัมผัส UI เวลา FPS ปรับความละเอียด เซฟ และจบเกม
-- `tests/simulation.test.js`: กฎเวลา ประชากร กำลังเสริม ทีมตั้งรับ ภาระเส้นทาง และจบเกม
-- `tests/browser.mjs`: 4 ขนาดจอ การเลือกประชากร กัด โหลดเซฟ เข้าบ้าน กำลังเสริม และผลชนะ
-
-Three.js r160 และ RoundedBoxGeometry ใช้ใบอนุญาต MIT ใน `vendor/LICENSE-three.txt`
-
-## ขอบเขต
-
-เป็นเกมต้นแบบโมเดลและท่าทาง procedural สไตล์ดินปั้น ไม่ใช่งาน stop-motion ที่ทำทีละเฟรมจริง พื้นที่เดินหลักยังเป็นระนาบเพื่อรักษาความเร็ว เนินและระดับชั้นรอบแผนที่เป็นฉากตกแต่ง เฟอร์นิเจอร์และบ่อน้ำยังไม่กีดขวางทาง ไม่มี multiplayer หรือ ragdoll บ้านชั้นเดียวและทหารเสริมหนึ่งระลอกช่วยให้เป้าหมายจบเกมทำสำเร็จได้แน่นอน
+Three.js and RoundedBoxGeometry are MIT licensed; see vendor/LICENSE-three.txt.
