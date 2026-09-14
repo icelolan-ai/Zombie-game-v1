@@ -6,7 +6,7 @@ const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use
 const report=[];
 try{
 for(const viewport of [{width:1280,height:800},{width:390,height:844},{width:844,height:390},{width:820,height:1180}]){
- const context=await browser.newContext({viewport,hasTouch:true});const page=await context.newPage();const errors=[];page.on('pageerror',e=>{errors.push(e.message);console.error('BROWSER ERROR',e.stack);});
+ const context=await browser.newContext({viewport,hasTouch:true});const page=await context.newPage();const errors=[];page.on('pageerror',e=>{errors.push(e.message);console.error('BROWSER ERROR',e.stack);});page.on('console',m=>{if(m.type()==='error'&&/THREE.WebGLProgram|VALIDATE_STATUS|Shader Error/.test(m.text()))errors.push(m.text());});
  await page.goto('http://127.0.0.1:8080/?debug=1');await page.waitForFunction(()=>window.__game?.view?.renderer);
  await page.locator('#populationCount').press(viewport.width===1280?'End':'Home');const chosen=viewport.width===1280?3000:100;assert.equal(await page.locator('#populationValue').textContent(),String(chosen));await page.screenshot({path:`test-output/menu-${viewport.width}.png`});
  await page.locator('#play').click();await page.waitForFunction(()=>window.__game.sim.time>.2);
@@ -36,10 +36,17 @@ for(const viewport of [{width:1280,height:800},{width:390,height:844},{width:844
  await page.waitForFunction(()=>Math.hypot(window.__game.view.look.x-45,window.__game.view.look.z+75)<.5);await page.locator('#play').click();await page.screenshot({path:`test-output/upper-floor-${viewport.width}.png`});
  await page.evaluate(()=>{const p=window.__game.sim.player;p.x=0;p.z=8;p.floor=0;p.y=0;p.py=0;});
  if(viewport.width===390){
-  for(const [name,x,z] of [['village',-75,-90],['farm',-105,-105]]){
+  for(const [name,x,z] of [['village',-75,-90],['farm',-105,-105],['park',-105,-15]]){
    await page.evaluate(({x,z})=>{const g=window.__game;g.pause();const p=g.sim.player;p.x=p.px=x;p.z=p.pz=z;p.floor=0;p.y=p.py=0;g.view.look.set(x,.4,z);}, {x,z});
-   await page.locator('#play').click();await page.screenshot({path:'test-output/'+name+'.png'});
+   await page.locator('#play').click();await page.waitForTimeout(350);await page.screenshot({path:'test-output/'+name+'.png'});
   }
+  await page.evaluate(()=>{const g=window.__game;g.pause();Object.assign(g.sim.player,{x:0,px:0,z:8,pz:8,floor:0,y:0,py:0});for(const [i,x] of [[2,1.6],[3,-1.6]])Object.assign(g.sim.entities[i],{x,px:x,z:8,pz:8,floor:0,y:0,py:0,downUntil:0});g.view.look.set(0,.4,8);g.view.zoom=24;});
+  await page.waitForTimeout(400);await page.locator('#menu').evaluate(el=>el.hidden=true);await page.screenshot({path:'test-output/clay-characters.png'});
+  const focus=await page.locator('#focusBlur').evaluate(el=>({x:parseFloat(el.style.getPropertyValue('--focus-x')),y:parseFloat(el.style.getPropertyValue('--focus-y')),blur:getComputedStyle(el).backdropFilter}));assert(Math.abs(focus.x-50)<10&&Math.abs(focus.y-50)<10);assert(focus.blur.includes('3px'));
+  // Rendering follows the stair flight immediately, even after a sideways approach.
+  await page.evaluate(()=>{const g=window.__game,p=g.sim.player;Object.assign(p,{x:-77,z:-69,floor:0,y:0,angle:Math.PI/2});g.sim.startStair(p,1);g.sim.advanceStair(p,.3);g.view.look.set(p.x,p.y,p.z);});
+  await page.waitForFunction(()=>{const g=window.__game,a=g.view.actors.get(g.sim.playerId);return a&&Math.abs(Math.cos(a.root.rotation.y-g.sim.player.angle)-1)<.001;});
+  await page.evaluate(()=>{const g=window.__game,p=g.sim.player;p.stair=null;g.view.zoom=43;document.querySelector('#menu').hidden=false;});
   await page.evaluate(()=>{const g=window.__game;g.pause();const p=g.sim.player;p.x=p.px=0;p.z=p.pz=8;p.floor=0;p.y=p.py=0;g.view.look.set(0,.4,8);const e=g.sim.entities[2];e.x=e.px=1;e.z=e.pz=8;e.floor=0;e.y=e.py=0;e.state='infected';e.infectAt=g.sim.time+20;e.downUntil=g.sim.time+10;});
   await page.waitForFunction(()=>{const a=window.__game.view.actors.get(window.__game.sim.entities[2].id);return a&&a.body.rotation.x< -1.2;});
   await page.locator('#play').click();await page.screenshot({path:'test-output/incubation.png'});

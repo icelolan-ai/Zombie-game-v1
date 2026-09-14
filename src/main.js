@@ -1,5 +1,5 @@
-import {Simulation,BUILDINGS,WORLD_HALF,CAMP,clamp} from './simulation.js?v=0.5.1';
-import {View} from './view.js?v=0.5.1';
+import {Simulation,BUILDINGS,WORLD_HALF,CAMP,clamp} from './simulation.js?v=0.6';
+import {View} from './view.js?v=0.6';
 const $=id=>document.getElementById(id);let sim=new Simulation(),view,started=false,paused=true,held=false,joy={x:0,z:0},keys=new Set(),acc=0,last=performance.now(),lastSave=0,toastTimer;const menu=$('menu');
 function toast(text){$('toast').textContent=text;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),3300);}
 try{view=new View($('game'),sim);}catch(error){$('menuText').textContent='เปิดภาพสามมิติไม่สำเร็จ ลองเปิดลิงก์ใน Safari และโหลดหน้าใหม่';$('play').disabled=true;console.error(error);throw error;}

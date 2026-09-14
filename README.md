@@ -1,4 +1,13 @@
-# Outbreak City — Pastel Edition v0.5.1
+# Outbreak City — Clay Edition v0.6
+
+## v0.6 — Hand-built clay city
+
+- Rounded puppet characters with capsule limbs, sculpted hair, ears, noses, collars and clay boots. Nearby animation poses use a 14 Hz stop-motion cadence; movement and camera remain smooth. The controlled zombie always receives the detailed model budget.
+- Shared procedural matte clay grain and subtle surface irregularity, rounded props, street-level brick courses, awnings, window planters and roof seams. All scenery is built locally from code; no paid generators, downloaded asset packs or runtime image dependencies.
+- Four parks with solid pond banks, lily pads, moving clay ducks, flower beds, benches, paths and lamps. Four tree silhouettes (evergreen, maple, birch, cypress), traffic signals, telephone booths, bins and house planters.
+- Peripheral blur follows the projected player position; the central gameplay region remains clear. Low quality reduces blur rather than removing it.
+- Stair facing updates for ascending, descending and reversing direction; the rendered model aligns to the flight immediately. Save format remains version 5 and older supported saves can still load.
+- Collision and navigation tests cover new props, ponds, park paths and all existing entrances. Browser checks capture parks and clay characters, check shader errors, player focus and stair orientation. Real iPhone/iPad performance must still be checked on-device.
 
 ## v0.5.1 fixes
 

@@ -1,5 +1,6 @@
 export const WORLD_HALF=144, FLOOR_HEIGHT=3.6, INCUBATION=25, REINFORCEMENTS=10;
 export const FARMS=[-1,1].flatMap(x=>[-1,1].map(z=>({x:x*105,z:z*105,w:22,d:22,name:'ไร่ข้าวโพด'})));
+export const PARKS=[{x:-105,z:-15},{x:105,z:15},{x:-15,z:-105},{x:15,z:105}].map((p,id)=>({...p,id,w:24,d:24,name:'สวนดินปั้น '+(id+1)}));
 export function inCornfield(x,z){return FARMS.some(p=>Math.abs(x-p.x)<p.w/2&&Math.abs(z-p.z)<p.d/2);}
 export const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 export const CAMPS=[{x:0,z:-137},{x:137,z:0},{x:0,z:137},{x:-137,z:0}],CAMP=CAMPS[0];
@@ -39,6 +40,19 @@ for(const c of CAMPS){const p=transportFor(c);OBSTACLES.push({x:p.x-1.25,z:p.z-2
 
 for(const b of BUILDINGS)if(b.fenced)OBSTACLES.push(...fencesFor(b));
 for(const f of FARMS)for(const [dx,dz] of [[-7,-7],[7,-7]])OBSTACLES.push({x:f.x+dx-1,z:f.z+dz-.7,w:2,d:1.4,hay:true});
+// Solid props and pond banks share collision rectangles with their rendered shapes.
+for(const p of PARKS){
+ OBSTACLES.push({x:p.x+2,z:p.z-6,w:6,d:4.5,pond:true});
+ for(const z of [-7,7])OBSTACLES.push({x:p.x-7,z:p.z+z,w:2.6,d:.85,bench:true,park:true});
+ for(const [dx,dz] of [[-9,-9],[-9,9],[9,9]])OBSTACLES.push({x:p.x+dx-.4,z:p.z+dz-.4,w:.8,d:.8,tree:true,park:true});
+ OBSTACLES.push({x:p.x-2,z:p.z+8,w:.45,d:.45,lamp:true,park:true});
+}
+for(const x of [-90,-30,30,90])for(const z of [-90,-30,30,90])OBSTACLES.push({x:x+4.5,z:z+4.5,w:.5,d:.5,traffic:true});
+for(const b of BUILDINGS){
+ if(b.id%6===1)OBSTACLES.push({x:b.x+10.6,z:b.z+2,w:1.35,d:1.35,phone:true});
+ OBSTACLES.push({x:b.x+5,z:b.z+11.2,w:.7,d:.7,bin:true});
+ if(b.kind==='house')OBSTACLES.push({x:b.x+3,z:b.z+11.3,w:1.1,d:.8,planter:true});
+}
 // Forest belts leave street lanes, entrances and fenced plots unobstructed.
 let forestSeed=391;const forestRandom=()=>{forestSeed=(forestSeed*16807)%2147483647;return forestSeed/2147483647;};
-for(let x=-138;x<=138;x+=9)for(let z=-138;z<=138;z+=9){const px=x+(forestRandom()-.5)*3,pz=z+(forestRandom()-.5)*3;if(Math.abs(px)<90&&Math.abs(pz)<90)continue;if(inCornfield(px,pz))continue;if(Math.abs(px-Math.round(px/30)*30)<4.8||Math.abs(pz-Math.round(pz/30)*30)<4.8)continue;if(BUILDINGS.some(b=>Math.abs(px-b.x)<14&&Math.abs(pz-b.z)<15)||CAMPS.some(c=>Math.hypot(px-c.x,pz-c.z)<12))continue;OBSTACLES.push({x:px-.35,z:pz-.35,w:.7,d:.7,tree:true,forest:true});}
+for(let x=-138;x<=138;x+=9)for(let z=-138;z<=138;z+=9){const px=x+(forestRandom()-.5)*3,pz=z+(forestRandom()-.5)*3;if(Math.abs(px)<90&&Math.abs(pz)<90)continue;if(inCornfield(px,pz)||PARKS.some(p=>Math.abs(px-p.x)<13&&Math.abs(pz-p.z)<13))continue;if(Math.abs(px-Math.round(px/30)*30)<4.8||Math.abs(pz-Math.round(pz/30)*30)<4.8)continue;if(BUILDINGS.some(b=>Math.abs(px-b.x)<14&&Math.abs(pz-b.z)<15)||CAMPS.some(c=>Math.hypot(px-c.x,pz-c.z)<12))continue;OBSTACLES.push({x:px-.35,z:pz-.35,w:.7,d:.7,tree:true,forest:true});}
