@@ -25,7 +25,7 @@ export const citySystems={
   if(kind!=='shot')this.events.push({type:'noise',kind,x:p.x,z:p.z,y:p.y??floor*3.6});return n;
  },
  heardNoise(e){
-  let best=null,score=0;for(const n of this.noises){if(n.until<=this.time||n.id===e.heardId)continue;const vertical=Math.abs(e.floor-n.floor),blocked=!this.navigationSight(e,n,0,true);const range=n.radius*(blocked?.48:1)/(1+vertical*.65),d=distance(e,n);if(d>range)continue;const strength=(1-d/range)*(n.until-this.time)/(n.until-n.created);if(strength>score){score=strength;best=n;}}return best;
+  let best=null,score=0;for(const n of this.noises){if(n.until<=this.time||n.id===e.heardId)continue;const vertical=Math.abs(e.floor-n.floor),d=distance(e,n),reach=n.radius/(1+vertical*.65);if(d>reach)continue;const blocked=!this.navigationSight(e,n,0,true),range=reach*(blocked?.48:1);if(d>range)continue;const strength=(1-d/range)*(n.until-this.time)/(n.until-n.created);if(strength>score){score=strength;best=n;}}return best;
  },
  roar(){
   const p=this.player;if(this.outcome||!p||p.state!=='zombie'||p.stair||p.fall||p.downUntil>this.time||this.time<this.roarReadyAt)return false;
