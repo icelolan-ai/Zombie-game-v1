@@ -1,5 +1,5 @@
 import * as T from '../vendor/three.module.js';
-import {PARKS,OBSTACLES,groundHeight} from './world.js?v=0.6';
+import {PARKS,OBSTACLES,groundHeight} from './world.js?v=0.7';
 
 export function clayTree(v,r){
  const x=r.x+r.w/2,z=r.z+r.d/2,y=groundHeight(x,z),kind=Math.abs(Math.round(x*7+z*13))%4;

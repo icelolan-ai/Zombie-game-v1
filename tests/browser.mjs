@@ -27,7 +27,7 @@ for(const viewport of [{width:1280,height:800},{width:390,height:844},{width:844
  assert.equal(await page.evaluate(()=>window.__game.sim.entities[1].state),'zombie');await page.waitForFunction(()=>window.__game.view.houses[0].cut.visible===false&&Math.hypot(window.__game.view.look.x+75,window.__game.view.look.z+75)<.5);
  await page.locator('#play').click();await page.screenshot({path:`test-output/game-${viewport.width}.png`});
  // Controls must be on screen and do not overlap the bite button.
- const boxes=await page.evaluate(()=>['joystick','bite','interact','pause','zoomSlider'].map(id=>{const r=document.getElementById(id).getBoundingClientRect();return {id,x:r.x,y:r.y,w:r.width,h:r.height};}));for(const b of boxes){assert(b.x>=0&&b.y>=0&&b.x+b.w<=viewport.width+1&&b.y+b.h<=viewport.height+1,JSON.stringify(b));}
+ const boxes=await page.evaluate(()=>['joystick','bite','interact','roar','pause','zoomSlider'].map(id=>{const r=document.getElementById(id).getBoundingClientRect();return {id,x:r.x,y:r.y,w:r.width,h:r.height};}));for(const b of boxes){assert(b.x>=0&&b.y>=0&&b.x+b.w<=viewport.width+1&&b.y+b.h<=viewport.height+1,JSON.stringify(b));}
  const drawCalls=await page.evaluate(()=>window.__game.view.renderer.info.render.calls);
  assert(drawCalls<350,`Too many draws: ${drawCalls}`);
  // Climb to the eighth floor and verify upper layers are cut away.
@@ -67,6 +67,16 @@ for(const viewport of [{width:1280,height:800},{width:390,height:844},{width:844
   await page.mouse.up();await page.mouse.down();await page.waitForFunction(p=>Math.hypot(window.__game.sim.player.x-p.x,window.__game.sim.player.z-p.z)>.5,stopped);await page.mouse.up();
   const released=await page.evaluate(()=>({x:window.__game.sim.player.x,z:window.__game.sim.player.z,t:window.__game.sim.time}));await page.waitForFunction(t=>window.__game.sim.time>t+.5,released.t);
   assert(await page.evaluate(p=>Math.hypot(window.__game.sim.player.x-p.x,window.__game.sim.player.z-p.z)<.01,released));
+ }
+ await page.locator('#roar').click();await page.waitForFunction(()=>window.__game.sim.roarReadyAt>window.__game.sim.time);await page.waitForFunction(()=>document.querySelector('#roar').disabled);
+ if(viewport.width===390){
+  await page.evaluate(()=>{const g=window.__game;g.pause();const c=g.sim.cars[0],p=g.sim.player;Object.assign(p,{x:c.x-2,px:c.x-2,z:c.z,pz:c.z,y:0,py:0,floor:0,stair:null,fall:null,cool:0,downUntil:0});g.view.look.set(p.x,.4,p.z);});
+  await page.locator('#play').click();await page.locator('#interact').click();await page.waitForFunction(()=>window.__game.sim.cars[0].glassBroken);await page.screenshot({path:'test-output/alarm.png'});
+  await page.evaluate(()=>{const g=window.__game;g.pause();const d=g.sim.doors[0];Object.assign(d,{barricadeHp:70,builtOnce:true,open:false});Object.assign(g.sim.player,{x:-75,px:-75,z:-64,pz:-64,y:0,py:0,floor:0,cool:0});g.view.look.set(-75,.4,-64);});
+  await page.locator('#play').click();await page.waitForFunction(()=>document.querySelector('#doorText').textContent.includes('แนวกั้น'));await page.screenshot({path:'test-output/barricade.png'});
+  await page.evaluate(()=>{const g=window.__game;g.pause();g.sim.cityEvent=null;g.sim.startCityEvent('evacuation');const q=g.sim.cityEvent.pickup;Object.assign(g.sim.player,{x:q.x-.8,px:q.x-.8,z:q.z-1.8,pz:q.z-1.8,y:0,py:0,floor:0,cool:0});g.view.look.set(q.x,.4,q.z);});
+  await page.locator('#play').click();await page.waitForFunction(()=>document.querySelector('#cityEventStatus').textContent.includes('รถอพยพ'));await page.locator('#interact').click();assert.equal(await page.evaluate(()=>window.__game.sim.cityEvent.hp),60);await page.screenshot({path:'test-output/evacuation.png'});
+  await page.evaluate(()=>window.__game.sim.finishEvacuation(false));
  }
  await page.evaluate(()=>{const g=window.__game;g.pause();for(const e of g.sim.entities.slice(1)){if(!e.everConverted){e.state='infected';e.infectAt=g.sim.time+.05;}}});
  await page.locator('#play').click();await page.waitForFunction(()=>!document.querySelector('#result').hidden);assert.equal(await page.evaluate(()=>window.__game.sim.outcome),'win');

@@ -1,4 +1,17 @@
-# Outbreak City — Clay Edition v0.6
+# Outbreak City — Clay Edition v0.7
+
+## v0.7 — Six connected sandbox systems
+
+1. **Sound:** gunshots, screams, door impacts, alarms and crashes attract nearby zombies. Walls and floors reduce hearing distance; sounds expire and the queue is capped at 32. Press **Use / E** beside a parked car to break its glass and sound a 20-second alarm (30-second reuse cooldown). Audio mute does not disable NPC hearing.
+2. **Personality and families:** civilians have deterministic courage, empathy and teamwork values and families of up to three. Families start near one another; empathetic relatives regroup, brave relatives assist fallen family members when safe, while fearful civilians flee. Assistance never cures infection or changes the 25-second conversion deadline.
+3. **Barricades and back doors:** cooperative civilians on the ground floor spend four seconds placing a furniture barricade at a nearby shelter door. Its 80 durability absorbs attacks before the original 100-durability door. Curtains close in fortified buildings. Threatened occupants can dismantle their own barrier and escape through new rear doors/gates. Existing door IDs are preserved.
+4. **Zombie memory:** zombies pursue visible prey, track its last observed position and search nearby rooms for up to 14 seconds after losing sight. They cannot continuously track unseen victims through walls. With no prey or useful memory, they investigate sounds and then wander.
+5. **Random events:** after citywide panic and 65 seconds, one event can start at a time, with randomized 75–110 second spacing. Evacuation vans wait 45 seconds for up to eight civilians; **Use / E** near the van damages it (80 durability), and a passenger converting aboard forces everyone out. Successful passengers count as *escaped*, separately from infected. When no unconverted/unescaped people remain, a round with escapees ends as “เมืองว่างแล้ว”; infecting everyone still wins normally. Temporary checkpoints redirect up to six existing guards for 40 seconds. Hidden infections start a normal 25-second incubation in an existing civilian; events do not silently add population.
+6. **Roar:** **R / คำราม** calls nearby zombies within 30 units for eight seconds with a 20-second cooldown. Close prey can still distract them. Navigation, doors and stairs remain physical; taking over a zombie clears its AI orders.
+
+Save version 7 preserves alarms, hearing/memory, events, passengers, cooldowns, barricades and escaped counts. Versions 3–5 load with new systems and rear doors initialized. All assets and audio are generated locally from game code; no paid services or runtime asset downloads.
+
+Validation includes regression tests for all six systems, van collision, rear exits, migration, incubation and possession; browser checks exercise the mobile roar button, car alarms, barricades and van attacks in addition to existing gameplay checks. Device FPS is not inferred from CI software rendering.
 
 ## v0.6 — Hand-built clay city
 

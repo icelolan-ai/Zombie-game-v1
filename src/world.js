@@ -13,16 +13,16 @@ export const VILLAGES=[{name:'หมู่บ้านสวนเหนือ',
 for(const [v,village] of VILLAGES.entries())for(const [i,[x,z]] of village.plots.entries())BUILDINGS.push({id:BUILDINGS.length,x,z,w:18,d:20,floors:1+i%2,kind:'house',village:v,fenced:true,color:[0xf5c4b2,0xc7ddb1,0xf4dca4,0xc4dbe5][v],roof:[0xbc8278,0x7da58e,0xc7956e,0x8e9cb8][v],name:`${village.name} ${i+1}`});
 const buildingCells=new Map(BUILDINGS.map(b=>[`${Math.round((b.x+75)/30)},${Math.round((b.z+75)/30)}`,b]));
 export function insideHouse(x,z){const b=buildingCells.get(`${Math.round((x+75)/30)},${Math.round((z+75)/30)}`);return b&&Math.abs(x-b.x)<9&&Math.abs(z-b.z)<10?b.id:-1;}
-export function fencesFor(b){return [{x:b.x-12.5,z:b.z-13,w:25,d:.3},{x:b.x-12.5,z:b.z-13,w:.3,d:26},{x:b.x+12.2,z:b.z-13,w:.3,d:26},{x:b.x-12.5,z:b.z+12.7,w:10.8,d:.3},{x:b.x+1.7,z:b.z+12.7,w:10.8,d:.3}].map(r=>({...r,fence:true}));}
+export function fencesFor(b){return [{x:b.x-12.5,z:b.z-13,w:10.8,d:.3},{x:b.x+1.7,z:b.z-13,w:10.8,d:.3},{x:b.x-12.5,z:b.z-13,w:.3,d:26},{x:b.x+12.2,z:b.z-13,w:.3,d:26},{x:b.x-12.5,z:b.z+12.7,w:10.8,d:.3},{x:b.x+1.7,z:b.z+12.7,w:10.8,d:.3}].map(r=>({...r,fence:true}));}
 export const roomAt=(b,x,z)=>Math.abs(x-b.x)>4?(x<b.x?0:2)+(z>b.z?1:0):-1;
 // All collision rectangles are also used to construct visible walls and furniture.
-export function wallsFor(b,floor=0){const x=b.x,z=b.z;let a=[{x:x-9,z:z-10,w:18,d:.4},{x:x-9,z:z-10,w:.4,d:20},{x:x+8.6,z:z-10,w:.4,d:20}];
+export function wallsFor(b,floor=0){const x=b.x,z=b.z;let a=[...(floor===0?[{x:x-9,z:z-10,w:7.5,d:.4},{x:x+1.5,z:z-10,w:7.5,d:.4}]:[{x:x-9,z:z-10,w:18,d:.4}]),{x:x-9,z:z-10,w:.4,d:20},{x:x+8.6,z:z-10,w:.4,d:20}];
  if(floor===0||floor===b.floors)a.push({x:x-9,z:z+9.6,w:7.5,d:.4},{x:x+1.5,z:z+9.6,w:7.5,d:.4});else a.push({x:x-9,z:z+9.6,w:18,d:.4});
  if(floor<b.floors)for(const side of [-1,1]){const wx=x+side*4-.2;for(const [off,len] of [[-9.6,3.6],[-4,8],[6,3.6]])a.push({x:wx,z:z+off,w:.4,d:len,interior:true});a.push({x:side<0?x-8.6:x+4.2,z:z-.2,w:4.4,d:.4,interior:true});}
  return a;
 }
 export function furnitureFor(b,floor){if(floor===b.floors)return [{x:b.x+4,z:b.z-7,w:2,d:2,furniture:true},{x:b.x-7.15,z:b.z-7.15,w:2.3,d:2.3,furniture:true}];return [-1,1].flatMap(side=>[-1,1].map(end=>({x:b.x+side*6.8-1,z:b.z+end*7.5-.65,w:2,d:1.3,furniture:true})));}
-export function doorTemplates(){let doors=[];for(const b of BUILDINGS){doors.push({building:b.id,floor:0,x:b.x,z:b.z+9.8,w:3,d:.4,exterior:true});for(let f=0;f<b.floors;f++)for(const side of [-1,1])for(const end of [-1,1])doors.push({building:b.id,floor:f,x:b.x+side*4,z:b.z+end*5,w:.4,d:2,exterior:false});}for(const b of BUILDINGS)if(b.fenced)doors.push({building:b.id,floor:0,x:b.x,z:b.z+12.85,w:3.4,d:.3,exterior:true,gate:true});return doors.map((d,id)=>({...d,id,hp:100,maxHp:100,open:false,broken:false,closeAt:0}));}
+export function doorTemplates(){let doors=[];for(const b of BUILDINGS){doors.push({building:b.id,floor:0,x:b.x,z:b.z+9.8,w:3,d:.4,exterior:true});for(let f=0;f<b.floors;f++)for(const side of [-1,1])for(const end of [-1,1])doors.push({building:b.id,floor:f,x:b.x+side*4,z:b.z+end*5,w:.4,d:2,exterior:false});}for(const b of BUILDINGS)if(b.fenced)doors.push({building:b.id,floor:0,x:b.x,z:b.z+12.85,w:3.4,d:.3,exterior:true,gate:true});for(const b of BUILDINGS){doors.push({building:b.id,floor:0,x:b.x,z:b.z-9.8,w:3,d:.4,exterior:true,rear:true});if(b.fenced)doors.push({building:b.id,floor:0,x:b.x,z:b.z-12.85,w:3.4,d:.3,exterior:true,gate:true,rear:true});}return doors.map((d,id)=>({...d,id,hp:100,maxHp:100,open:false,broken:false,closeAt:0}));}
 export const OBSTACLES=[];
 for(const b of BUILDINGS){OBSTACLES.push({x:b.x-11.6,z:b.z-8,w:.8,d:.8,tree:true});if(b.kind!=='house'&&b.id%2===0)OBSTACLES.push({x:b.x+10.5,z:b.z+12,w:2,d:3.8,car:true});}
 for(const c of CAMPS)for(const side of [-1,1])OBSTACLES.push({x:c.x+side*5-1,z:c.z-1,w:2,d:2,camp:true});
