@@ -1,6 +1,22 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {Simulation,BUILDINGS,FLOOR_HEIGHT} from '../src/simulation.js';
-import {stairsFor,OBSTACLES} from '../src/world.js';
+import {stairsFor,OBSTACLES,groundHeight} from '../src/world.js';
+
+test('crowds cross the cornfield slopes instead of queuing at the height threshold',()=>{
+ const s=new Simulation(4,3000),group=s.entities.slice(1,25);
+ for(const [i,e] of group.entries()){e.x=-123+i*.25;e.z=-104;e.y=groundHeight(e.x,e.z);e.goal={x:e.x,z:-124,floor:0};e.sepX=e.sepZ=0;}
+ for(let i=0;i<300;i++){s.time+=.05;s.pathBudget=8;for(const e of group)s.navigate(e,e.goal,3,.05);assert(s.pathCount<=8);s.pathCount=0;}
+ assert(group.every(e=>Math.abs(e.z+124)<.5),'all agents must reach the raised plateau');
+ for(const e of group){e.goal={x:e.x,z:-104,floor:0};e.route=[];}
+ for(let i=0;i<300;i++){s.time+=.05;s.pathBudget=8;for(const e of group)s.navigate(e,e.goal,3,.05);s.pathCount=0;}
+ assert(group.every(e=>Math.abs(e.z+104)<.5),'all agents must descend again');
+});
+test('possessing a deployed zombie cancels AI and obeys only player input, including after load',()=>{
+ let s=new Simulation(),e=s.entities[1];e.state='zombie';e.x=0;e.z=8;e.y=0;e.exitGoal={x:0,z:25,floor:0};e.deployAt=0;e.goal=e.exitGoal;e.route=[e.exitGoal];e.targetId=2;e.feeding=999;e.pauseUntil=999;e.thinkAt=0;s.damage(s.player,999,'test');
+ const start={x:e.x,z:e.z};s.step(.05);assert.equal(s.playerId,e.id);assert.equal(e.x,start.x);assert.equal(e.z,start.z);assert.equal(e.exitGoal,null);assert.equal(e.goal,null);assert.equal(e.targetId,null);
+ s=Simulation.restore(s.snapshot());e=s.player;for(let i=0;i<10;i++)s.step(.05);assert.equal(e.x,start.x);assert.equal(e.z,start.z);
+ s.step(.05,{x:1,z:0,bite:false});assert(e.x>start.x+.2);const x=e.x;for(let i=0;i<10;i++)s.step(.05);assert.equal(e.x,x);
+});
 const convert=(s,n)=>{for(const e of s.entities.slice(1,n+1)){if(!e.everConverted){e.everConverted=true;s.converted++;}e.state='zombie';e.infectAt=null;}};
 test('population 100–3000 and fully linked 3/4/8/9-storey buildings',()=>{let s=new Simulation(1,3000);assert.equal(s.total,3000);assert.equal(s.entities.length,3001);assert.equal(BUILDINGS.length,52);assert.deepEqual([...new Set(BUILDINGS.slice(0,36).map(b=>b.floors))].sort(),[3,4,8,9]);for(const b of BUILDINGS){assert(s.path({x:b.x,z:b.z+15,floor:0},{x:b.x,z:b.z,floor:b.floors}).length>0);assert(s.doors.some(d=>d.building===b.id&&d.exterior));}});
 test('walls, furniture, doors and parked cars block movement; hammering destroys doors',()=>{const s=new Simulation(),p=s.player,b=BUILDINGS[0];p.x=b.x;p.z=b.z+11;for(let i=0;i<30;i++)s.moveEntity(p,0,-.1);assert(p.z>b.z+10);let door=s.doors.find(d=>d.building===0&&d.exterior);assert.equal(door.hp,100);for(let i=0;i<5;i++)s.interact();assert(door.broken);for(let i=0;i<30;i++)s.moveEntity(p,0,-.1);assert(p.z<b.z+10);p.x=b.x-7;p.z=b.z+11;s.moveEntity(p,0,-5);assert(p.z>b.z+10);for(const o of OBSTACLES)assert(!s.walkable(o.x+o.w/2,o.z+o.d/2));assert(!s.walkable(b.x-6.8,b.z-7.5));});

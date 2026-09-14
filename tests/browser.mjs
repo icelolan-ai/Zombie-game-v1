@@ -48,6 +48,19 @@ for(const viewport of [{width:1280,height:800},{width:390,height:844},{width:844
  await page.evaluate(()=>{const g=window.__game;g.pause();for(let i=1;i<=10;i++){let e=g.sim.entities[i];if(!e.everConverted){e.everConverted=true;g.sim.converted++;}e.state='zombie';e.infectAt=null;}g.sim.step(.05);});
  assert.equal(await page.evaluate(()=>window.__game.sim.reinforced),true);assert.equal(await page.evaluate(()=>window.__game.sim.total),chosen+10);
  await page.locator('#play').click();await page.waitForFunction(()=>window.__game.view.crowd.count>0);
+ // A possessed reinforcement must drop its AI route and release the old joystick.
+ if(viewport.width===390){
+  await page.evaluate(()=>{const s=window.__game.sim,e=s.entities[1];Object.assign(e,{x:0,px:0,z:8,pz:8,y:0,py:0,floor:0,stair:null,fall:null,downUntil:0,exitGoal:{x:0,z:25,floor:0},deployAt:0});});
+  const j=await page.locator('#joystick').boundingBox();await page.mouse.move(j.x+j.width/2+25,j.y+j.height/2);await page.mouse.down();
+  await page.evaluate(()=>{const s=window.__game.sim;s.damage(s.player,9999,'test');});
+  await page.waitForFunction(()=>window.__game.sim.playerId===window.__game.sim.entities[1].id);
+  const rest=await page.evaluate(()=>({x:window.__game.sim.player.x,z:window.__game.sim.player.z,t:window.__game.sim.time}));
+  await page.waitForFunction(t=>window.__game.sim.time>t+.5,rest.t);
+  const stopped=await page.evaluate(()=>({x:window.__game.sim.player.x,z:window.__game.sim.player.z}));assert(Math.hypot(stopped.x-rest.x,stopped.z-rest.z)<.01);
+  await page.mouse.up();await page.mouse.down();await page.waitForFunction(p=>Math.hypot(window.__game.sim.player.x-p.x,window.__game.sim.player.z-p.z)>.5,stopped);await page.mouse.up();
+  const released=await page.evaluate(()=>({x:window.__game.sim.player.x,z:window.__game.sim.player.z,t:window.__game.sim.time}));await page.waitForFunction(t=>window.__game.sim.time>t+.5,released.t);
+  assert(await page.evaluate(p=>Math.hypot(window.__game.sim.player.x-p.x,window.__game.sim.player.z-p.z)<.01,released));
+ }
  await page.evaluate(()=>{const g=window.__game;g.pause();for(const e of g.sim.entities.slice(1)){if(!e.everConverted){e.state='infected';e.infectAt=g.sim.time+.05;}}});
  await page.locator('#play').click();await page.waitForFunction(()=>!document.querySelector('#result').hidden);assert.equal(await page.evaluate(()=>window.__game.sim.outcome),'win');
  const endTime=await page.evaluate(()=>window.__game.sim.time);await page.waitForTimeout(250);assert.equal(await page.evaluate(()=>window.__game.sim.time),endTime);

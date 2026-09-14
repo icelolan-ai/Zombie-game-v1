@@ -1,4 +1,11 @@
-# Outbreak City — Pastel Edition v0.5
+# Outbreak City — Pastel Edition v0.5.1
+
+## v0.5.1 fixes
+
+- Navigation follows walkable slopes independently of combat height checks. NPC no longer stall at the 1.6-unit height threshold around farms and raised parks.
+- Possession clears deployment routes, AI targets and feeding intent; player input takes priority over deployment AI, including loaded saves.
+- Joystick ownership and held inputs reset on possession, pause and load, allowing a fresh touch to control the new character.
+- Regression tests cover a 24-person group ascending/descending a farm terrace in a 3000-person world, possession and save/load, and browser joystick release/reacquisition after death.
 
 A free, self-contained browser zombie sandbox, deployed with GitHub Pages. Vanilla JavaScript and vendored Three.js; no runtime CDN or build step.
 

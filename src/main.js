@@ -1,5 +1,5 @@
-import {Simulation,BUILDINGS,WORLD_HALF,CAMP,clamp} from './simulation.js?v=0.5';
-import {View} from './view.js?v=0.5';
+import {Simulation,BUILDINGS,WORLD_HALF,CAMP,clamp} from './simulation.js?v=0.5.1';
+import {View} from './view.js?v=0.5.1';
 const $=id=>document.getElementById(id);let sim=new Simulation(),view,started=false,paused=true,held=false,joy={x:0,z:0},keys=new Set(),acc=0,last=performance.now(),lastSave=0,toastTimer;const menu=$('menu');
 function toast(text){$('toast').textContent=text;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),3300);}
 try{view=new View($('game'),sim);}catch(error){$('menuText').textContent='เปิดภาพสามมิติไม่สำเร็จ ลองเปิดลิงก์ใน Safari และโหลดหน้าใหม่';$('play').disabled=true;console.error(error);throw error;}
@@ -7,7 +7,7 @@ let dbPromise=new Promise((resolve,reject)=>{const r=indexedDB.open('outbreak-vi
 async function savedata(data){const db=await dbPromise;return new Promise((resolve,reject)=>{const tx=db.transaction('saves','readwrite');tx.objectStore('saves').put(data,'current');tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error);});}
 async function readdata(){const db=await dbPromise;return new Promise((resolve,reject)=>{const r=db.transaction('saves').objectStore('saves').get('current');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
 async function save(notify=true){try{await savedata(sim.snapshot());$('load').disabled=false;if(notify)toast('บันทึกเกมแล้ว');}catch{toast('บันทึกในเครื่องไม่ได้ ใช้ส่งออกเซฟเพื่อเก็บความคืบหน้า');}}
-function clearInput(){fingers.clear();pinch=0;keys.clear();held=false;joy={x:0,z:0};$('stick').style.transform='';}
+function clearInput(){if(joyId!==null){const id=joyId;joyId=null;if(joystick.hasPointerCapture(id))joystick.releasePointerCapture(id);}fingers.clear();pinch=0;keys.clear();held=false;joy={x:0,z:0};$('stick').style.transform='';}
 function pause(){if(!started||sim.outcome)return;paused=true;clearInput();menu.hidden=false;$('play').innerHTML='กลับไปเล่นต่อ <span>↗</span>';$('menuText').textContent='เกมหยุดอยู่ เวลาติดเชื้อจะเดินต่อเมื่อกลับไปเล่น';$('pauseActions').hidden=false;$('populationSetup').hidden=true;save(false);}
 function resume(){if(sim.outcome){endRound();return;}document.activeElement?.blur();for(const e of sim.entities){e.px=e.x;e.pz=e.z;e.py=e.y;}started=true;paused=false;menu.hidden=true;last=performance.now();acc=0;audioStart();}
 function reset(s){sim=s;view.reset(sim);lastSave=sim.time;clearInput();resume();toast('กัดชาวบ้านใกล้ตัว แล้วรอ 25 วินาที');}
@@ -48,7 +48,7 @@ function animate(now){
   acc=Math.min(acc+dt,.15);
   const sx=joy.x+(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),sz=joy.z+(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0);
   const input={x:sx*Math.cos(view.yaw)+sz*Math.sin(view.yaw),z:-sx*Math.sin(view.yaw)+sz*Math.cos(view.yaw),bite:held||keys.has(' ')};
-  while(acc>=.05&&!sim.outcome){sim.step(.05,input);acc-=.05;}
+  while(acc>=.05&&!sim.outcome){const playerId=sim.playerId;sim.step(.05,input);if(playerId!==sim.playerId){clearInput();input.x=input.z=0;input.bite=false;}acc-=.05;}
   let soundBudget=5;for(const ev of sim.events){view.event(ev);if(soundBudget>0&&['bite','shot','convert'].includes(ev.type)){tone(ev.type);soundBudget--;}if(ev.type==='lockdown')toast('ผู้ติดเชื้อถึง 300! หน่วยป้องกันถอยขึ้นชั้นสูง');if(ev.type==='panic')toast('เมืองแตกตื่น! ผู้คนหนีเข้าที่พักและขึ้นชั้นบน');if(ev.type==='transfer')toast('ย้ายไปควบคุมซอมบี้ที่เหลือ');if(ev.type==='reinforcements')toast('ทหารเสริม 10 นายเข้าจากขอบเมือง!');}
   sim.events=[];if(sim.outcome)endRound();else if(sim.time-lastSave>20){lastSave=sim.time;save(false);}
  }else{fpsStart=now;fpsFrames=0;}
