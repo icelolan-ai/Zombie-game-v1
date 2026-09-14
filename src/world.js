@@ -10,7 +10,7 @@ export function insideHouse(x,z){const col=Math.round((x+75)/30),row=Math.round(
 export const roomAt=(b,x,z)=>Math.abs(x-b.x)>4?(x<b.x?0:2)+(z>b.z?1:0):-1;
 // All collision rectangles are also used to construct visible walls and furniture.
 export function wallsFor(b,floor=0){const x=b.x,z=b.z;let a=[{x:x-9,z:z-10,w:18,d:.4},{x:x-9,z:z-10,w:.4,d:20},{x:x+8.6,z:z-10,w:.4,d:20}];
- if(floor===0)a.push({x:x-9,z:z+9.6,w:7.5,d:.4},{x:x+1.5,z:z+9.6,w:7.5,d:.4});else a.push({x:x-9,z:z+9.6,w:18,d:.4});
+ if(floor===0||floor===b.floors)a.push({x:x-9,z:z+9.6,w:7.5,d:.4},{x:x+1.5,z:z+9.6,w:7.5,d:.4});else a.push({x:x-9,z:z+9.6,w:18,d:.4});
  if(floor<b.floors)for(const side of [-1,1]){const wx=x+side*4-.2;for(const [off,len] of [[-9.6,3.6],[-4,8],[6,3.6]])a.push({x:wx,z:z+off,w:.4,d:len,interior:true});a.push({x:side<0?x-8.6:x+4.2,z:z-.2,w:4.4,d:.4,interior:true});}
  return a;
 }
@@ -22,3 +22,11 @@ for(const c of CAMPS)for(const side of [-1,1])OBSTACLES.push({x:c.x+side*5-1,z:c
 export function segmentBox(a,b,r,pad=0){let lo=0,hi=1;for(const axis of ['x','z']){let delta=b[axis]-a[axis],min=r[axis]-pad,max=r[axis]+(axis==='x'?r.w:r.d)+pad;if(Math.abs(delta)<1e-9){if(a[axis]<min||a[axis]>max)return false;}else{let u=(min-a[axis])/delta,v=(max-a[axis])/delta;if(u>v)[u,v]=[v,u];lo=Math.max(lo,u);hi=Math.min(hi,v);if(lo>hi)return false;}}return true;}
 export const doorRect=d=>({x:d.x-d.w/2,z:d.z-d.d/2,w:d.w,d:d.d});
 export function stairsFor(b,f){return {a:{x:b.x+(f%2?2:-2),z:b.z+(f%2?-6:6),floor:f},b:{x:b.x+(f%2?2:-2),z:b.z+(f%2?6:-6),floor:f+1}};}
+
+// Raised park terraces have sloped approaches; simulation and mesh share this surface.
+export const TERRACES=[-1,1].flatMap(side=>[-60,-20,20,60].map(z=>({x:side*98,z,w:12,d:18,h:1.2})));
+export function groundHeight(x,z){let y=0;for(const p of TERRACES){const a=clamp((p.w/2-Math.abs(x-p.x))/2,0,1),b=clamp((p.d/2-Math.abs(z-p.z))/2,0,1);y=Math.max(y,p.h*a*b);}return y;}
+for(const b of BUILDINGS){for(const z of [-3,4])OBSTACLES.push({x:b.x-11.6,z:b.z+z,w:.8,d:.8,tree:true});OBSTACLES.push({x:b.x-6.5,z:b.z+11.5,w:2.6,d:.85,bench:true});OBSTACLES.push({x:b.x+11,z:b.z-7.5,w:.45,d:.45,lamp:true});}
+
+export const transportFor=c=>({x:c.x+(c.x===0?6:0),z:c.z+(c.x===0?0:6)});
+for(const c of CAMPS){const p=transportFor(c);OBSTACLES.push({x:p.x-1.25,z:p.z-2.25,w:2.5,d:4.5,truck:true});}

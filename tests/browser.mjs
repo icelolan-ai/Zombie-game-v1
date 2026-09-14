@@ -8,8 +8,13 @@ try{
 for(const viewport of [{width:1280,height:800},{width:390,height:844},{width:844,height:390},{width:820,height:1180}]){
  const context=await browser.newContext({viewport,hasTouch:true});const page=await context.newPage();const errors=[];page.on('pageerror',e=>{errors.push(e.message);console.error('BROWSER ERROR',e.stack);});
  await page.goto('http://127.0.0.1:8080/?debug=1');await page.waitForFunction(()=>window.__game?.view?.renderer);
- await page.locator('#populationCount').press(viewport.width===1280?'End':'Home');const chosen=viewport.width===1280?2000:100;assert.equal(await page.locator('#populationValue').textContent(),String(chosen));await page.screenshot({path:`test-output/menu-${viewport.width}.png`});
+ await page.locator('#populationCount').press(viewport.width===1280?'End':'Home');const chosen=viewport.width===1280?3000:100;assert.equal(await page.locator('#populationValue').textContent(),String(chosen));await page.screenshot({path:`test-output/menu-${viewport.width}.png`});
  await page.locator('#play').click();await page.waitForFunction(()=>window.__game.sim.time>.2);
+ // Camera drag and the vertical range work without engaging the movement joystick.
+ const yawBefore=await page.evaluate(()=>window.__game.view.yaw);await page.mouse.move(viewport.width*.35,viewport.height*.5);await page.mouse.down();await page.mouse.move(viewport.width*.65,viewport.height*.5,{steps:8});await page.mouse.up();assert(Math.abs(await page.evaluate(()=>window.__game.view.yaw)-yawBefore)>.2);
+ await page.locator('#zoomSlider').press('End');assert.equal(await page.evaluate(()=>window.__game.view.zoom),70);await page.locator('#zoomSlider').press('Home');assert.equal(await page.evaluate(()=>window.__game.view.zoom),24);
+ await page.evaluate(()=>{const g=window.__game;g.view.yaw=.65;g.view.zoom=43;document.getElementById('zoomSlider').value='43';});
+ const sliderBox=await page.locator('#zoomSlider').boundingBox();assert(sliderBox.height>sliderBox.width&&sliderBox.x>viewport.width*.8);
  await page.screenshot({path:`test-output/street-${viewport.width}.png`});assert.equal(await page.locator('#menu').isVisible(),false);assert.equal(await page.evaluate(()=>window.__game.sim.total),chosen);
  // Stop the simulation while creating a controlled, reproducible bite fixture.
  await page.evaluate(()=>{let g=window.__game;g.pause();let p=g.sim.player;p.x=0;p.z=8;p.floor=0;p.y=0;let e=g.sim.entities[1];e.x=1;e.z=8;e.state='human';e.infectAt=null;});
@@ -22,7 +27,7 @@ for(const viewport of [{width:1280,height:800},{width:390,height:844},{width:844
  assert.equal(await page.evaluate(()=>window.__game.sim.entities[1].state),'zombie');await page.waitForFunction(()=>window.__game.view.houses[0].cut.visible===false&&Math.hypot(window.__game.view.look.x+75,window.__game.view.look.z+75)<.5);
  await page.locator('#play').click();await page.screenshot({path:`test-output/game-${viewport.width}.png`});
  // Controls must be on screen and do not overlap the bite button.
- const boxes=await page.evaluate(()=>['joystick','bite','interact','pause'].map(id=>{const r=document.getElementById(id).getBoundingClientRect();return {id,x:r.x,y:r.y,w:r.width,h:r.height};}));for(const b of boxes){assert(b.x>=0&&b.y>=0&&b.x+b.w<=viewport.width+1&&b.y+b.h<=viewport.height+1,JSON.stringify(b));}
+ const boxes=await page.evaluate(()=>['joystick','bite','interact','pause','zoomSlider'].map(id=>{const r=document.getElementById(id).getBoundingClientRect();return {id,x:r.x,y:r.y,w:r.width,h:r.height};}));for(const b of boxes){assert(b.x>=0&&b.y>=0&&b.x+b.w<=viewport.width+1&&b.y+b.h<=viewport.height+1,JSON.stringify(b));}
  const drawCalls=await page.evaluate(()=>window.__game.view.renderer.info.render.calls);
  assert(drawCalls<350,`Too many draws: ${drawCalls}`);
  // Climb to the eighth floor and verify upper layers are cut away.
