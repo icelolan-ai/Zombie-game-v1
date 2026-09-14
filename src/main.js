@@ -1,5 +1,5 @@
-import {Simulation,BUILDINGS,WORLD_HALF,CAMP,clamp} from './simulation.js?v=0.4';
-import {View} from './view.js?v=0.4';
+import {Simulation,BUILDINGS,WORLD_HALF,CAMP,clamp} from './simulation.js?v=0.5';
+import {View} from './view.js?v=0.5';
 const $=id=>document.getElementById(id);let sim=new Simulation(),view,started=false,paused=true,held=false,joy={x:0,z:0},keys=new Set(),acc=0,last=performance.now(),lastSave=0,toastTimer;const menu=$('menu');
 function toast(text){$('toast').textContent=text;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),3300);}
 try{view=new View($('game'),sim);}catch(error){$('menuText').textContent='เปิดภาพสามมิติไม่สำเร็จ ลองเปิดลิงก์ใน Safari และโหลดหน้าใหม่';$('play').disabled=true;console.error(error);throw error;}
@@ -11,8 +11,9 @@ function clearInput(){fingers.clear();pinch=0;keys.clear();held=false;joy={x:0,z
 function pause(){if(!started||sim.outcome)return;paused=true;clearInput();menu.hidden=false;$('play').innerHTML='กลับไปเล่นต่อ <span>↗</span>';$('menuText').textContent='เกมหยุดอยู่ เวลาติดเชื้อจะเดินต่อเมื่อกลับไปเล่น';$('pauseActions').hidden=false;$('populationSetup').hidden=true;save(false);}
 function resume(){if(sim.outcome){endRound();return;}document.activeElement?.blur();for(const e of sim.entities){e.px=e.x;e.pz=e.z;e.py=e.y;}started=true;paused=false;menu.hidden=true;last=performance.now();acc=0;audioStart();}
 function reset(s){sim=s;view.reset(sim);lastSave=sim.time;clearInput();resume();toast('กัดชาวบ้านใกล้ตัว แล้วรอ 25 วินาที');}
+function newGameSeed(){const value=new Uint32Array(1);crypto.getRandomValues(value);return value[0];}
 $('populationCount').oninput=e=>$('populationValue').textContent=e.target.value;
-$('play').onclick=()=>{if(!started)reset(new Simulation(815,Number($('populationCount').value)));else resume();if(sim.time<1)toast('เดินเข้าหาชาวบ้าน แล้วกดกัด');};$('pause').onclick=pause;
+$('play').onclick=()=>{if(!started)reset(new Simulation(newGameSeed(),Number($('populationCount').value)));else resume();if(sim.time<1)toast('เดินเข้าหาชาวบ้าน แล้วกดกัด');};$('pause').onclick=pause;
 $('load').onclick=async()=>{try{const data=await readdata();if(!data){toast('ยังไม่มีเซฟในเครื่องนี้');return;}reset(Simulation.restore(data));toast('โหลดเซฟแล้ว');}catch{toast('โหลดเซฟไม่สำเร็จ ลองนำเข้าไฟล์เซฟ');}};
 $('save').onclick=()=>save();$('restart').onclick=()=>{if(confirm('กลับไปตั้งค่ารอบใหม่?'))newRound();};
 function newRound(){started=false;paused=true;clearInput();$('result').hidden=true;menu.hidden=false;$('populationSetup').hidden=false;$('pauseActions').hidden=true;$('play').textContent='เริ่มแพร่เชื้อ ↗';$('menuText').textContent='เลือกประชากรแล้วเริ่มรอบใหม่ ซอมบี้ถึง 30 ตัว ผู้คนจะหนีเข้าตึก · กดกัดค้างเพื่อพังประตู';}

@@ -35,6 +35,15 @@ for(const viewport of [{width:1280,height:800},{width:390,height:844},{width:844
  await page.waitForFunction(()=>window.__game.view.houses[4].levels[8].group.visible===false);
  await page.waitForFunction(()=>Math.hypot(window.__game.view.look.x-45,window.__game.view.look.z+75)<.5);await page.locator('#play').click();await page.screenshot({path:`test-output/upper-floor-${viewport.width}.png`});
  await page.evaluate(()=>{const p=window.__game.sim.player;p.x=0;p.z=8;p.floor=0;p.y=0;p.py=0;});
+ if(viewport.width===390){
+  for(const [name,x,z] of [['village',-75,-90],['farm',-105,-105]]){
+   await page.evaluate(({x,z})=>{const g=window.__game;g.pause();const p=g.sim.player;p.x=p.px=x;p.z=p.pz=z;p.floor=0;p.y=p.py=0;g.view.look.set(x,.4,z);}, {x,z});
+   await page.locator('#play').click();await page.screenshot({path:'test-output/'+name+'.png'});
+  }
+  await page.evaluate(()=>{const g=window.__game;g.pause();const p=g.sim.player;p.x=p.px=0;p.z=p.pz=8;p.floor=0;p.y=p.py=0;g.view.look.set(0,.4,8);const e=g.sim.entities[2];e.x=e.px=1;e.z=e.pz=8;e.floor=0;e.y=e.py=0;e.state='infected';e.infectAt=g.sim.time+20;e.downUntil=g.sim.time+10;});
+  await page.waitForFunction(()=>{const a=window.__game.view.actors.get(window.__game.sim.entities[2].id);return a&&a.body.rotation.x< -1.2;});
+  await page.locator('#play').click();await page.screenshot({path:'test-output/incubation.png'});
+ }
  // The maximum crowd grows safely, then the result screen stops simulation.
  await page.evaluate(()=>{const g=window.__game;g.pause();for(let i=1;i<=10;i++){let e=g.sim.entities[i];if(!e.everConverted){e.everConverted=true;g.sim.converted++;}e.state='zombie';e.infectAt=null;}g.sim.step(.05);});
  assert.equal(await page.evaluate(()=>window.__game.sim.reinforced),true);assert.equal(await page.evaluate(()=>window.__game.sim.total),chosen+10);
