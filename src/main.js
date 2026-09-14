@@ -9,7 +9,7 @@ async function readdata(){const db=await dbPromise;return new Promise((resolve,r
 async function save(notify=true){try{await savedata(sim.snapshot());$('load').disabled=false;if(notify)toast('บันทึกเกมแล้ว');}catch{toast('บันทึกในเครื่องไม่ได้ ใช้ส่งออกเซฟเพื่อเก็บความคืบหน้า');}}
 function clearInput(){keys.clear();held=false;joy={x:0,z:0};$('stick').style.transform='';}
 function pause(){if(!started||sim.outcome)return;paused=true;clearInput();menu.hidden=false;$('play').innerHTML='กลับไปเล่นต่อ <span>↗</span>';$('menuText').textContent='เกมหยุดอยู่ เวลาติดเชื้อจะเดินต่อเมื่อกลับไปเล่น';$('pauseActions').hidden=false;$('populationSetup').hidden=true;save(false);}
-function resume(){if(sim.outcome){endRound();return;}document.activeElement?.blur();started=true;paused=false;menu.hidden=true;last=performance.now();acc=0;audioStart();}
+function resume(){if(sim.outcome){endRound();return;}document.activeElement?.blur();for(const e of sim.entities){e.px=e.x;e.pz=e.z;e.py=e.y;}started=true;paused=false;menu.hidden=true;last=performance.now();acc=0;audioStart();}
 function reset(s){sim=s;view.reset(sim);lastSave=sim.time;clearInput();resume();toast('กัดชาวบ้านใกล้ตัว แล้วรอ 25 วินาที');}
 $('populationCount').oninput=e=>$('populationValue').textContent=e.target.value;
 $('play').onclick=()=>{if(!started)reset(new Simulation(815,Number($('populationCount').value)));else resume();if(sim.time<1)toast('เดินเข้าหาชาวบ้าน แล้วกดกัด');};$('pause').onclick=pause;
